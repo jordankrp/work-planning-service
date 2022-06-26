@@ -1,6 +1,6 @@
 # work-planning-service
 
-This is an REST API that serves as a work planning service.
+This is a REST API that serves as a work planning service.
 
 Business requirements:
 
