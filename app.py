@@ -3,24 +3,25 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-countries = [
-    {"id": 1, "name": "Thailand", "capital": "Bangkok", "area": 513120},
-    {"id": 2, "name": "Australia", "capital": "Canberra", "area": 7617930},
-    {"id": 3, "name": "Egypt", "capital": "Cairo", "area": 1010408},
+workers = [
+    {"Miles Davis": {"29-06-2022": "0-8", "30-06-2022": "16-24"}},
+    {"Dizzy Gillespie": {"29-06-2022": "8-16", "31-06-2022": "0-8"}},
+    {"Charlie Parker": {"30-06-2022": "0-8"}},
 ]
 
-def _find_next_id():
-    return max(country["id"] for country in countries) + 1
+#def _find_next_id():
+#    return max(worker["id"] for worker in workers) + 1
 
-@app.get("/countries")
-def get_countries():
-    return jsonify(countries)
+@app.get("/workers")
+def get_workers():
+    return jsonify(workers)
 
-@app.post("/countries")
-def add_country():
+@app.post("/workers")
+def add_worker():
     if request.is_json:
-        country = request.get_json()
-        country["id"] = _find_next_id()
-        countries.append(country)
-        return country, 201
+        worker = request.get_json()
+        #print(f"worker name is {worker["name"]}")
+        #worker["id"] = _find_next_id()
+        workers.append(worker)
+        return worker, 201
     return {"error": "Request must be JSON"}, 415
