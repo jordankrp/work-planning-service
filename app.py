@@ -4,9 +4,9 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 workers = [
-    {"Miles Davis": {"29-06-2022": "0-8", "30-06-2022": "16-24"}},
-    {"Dizzy Gillespie": {"29-06-2022": "8-16", "31-06-2022": "0-8"}},
-    {"Charlie Parker": {"30-06-2022": "0-8"}},
+    {"worker_id": "1110", "name": "Miles Davis", "shifts": {"29-06-2022": "0-8", "30-06-2022": "16-24"}},
+    {"worker_id": "1112", "name": "Dizzy Gillespie", "shifts": {"29-06-2022": "8-16", "31-06-2022": "0-8"}},
+    {"worker_id": "1120", "name": "Charlie Parker", "shifts": {"30-06-2022": "0-8"}},
 ]
 
 #def _find_next_id():
@@ -15,6 +15,10 @@ workers = [
 @app.get("/workers")
 def get_workers():
     return jsonify(workers)
+
+#@app.get("/workers/<int:worker_id>")
+#def get_worker():
+#    return jsonify(workers[worker_id])
 
 @app.post("/workers")
 def add_worker():
