@@ -38,24 +38,104 @@ def display_all_workers():
 def get_worker_id():
     print(term.underline("Please type in the worker ID"))
     print()
+
     answer = prompt(
             {
                 "type": "input",
                 "name": "worker_id",
-                "message": "Worker ID:",
-                #"validate": greengrass_group_validation,
+                "message": "Worker ID:"
             }
         )
-    return str(answer)
+    return str(answer['worker_id'])
 
 def display_worker(worker_id):
-	worker = requests.get(f"http://localhost:5000/worker/{worker_id}")
-	print(json.loads(worker))
-	#print(f"Name: {worker.json()['name']}")
-	#print(f"Worker ID: {worker.json()['worker_id']}")
-	#for date in worker.json()['shifts']:
-	#	print(f"{date}: {worker.json()['shifts'][date]}")
-	#print('\n')
+    try:
+        worker = requests.get(f"http://localhost:5000/workers/{worker_id}").json()
+        print(f"Name: {worker['name']}")
+        print(f"Worker ID: {worker['worker_id']}")
+        for date in worker['shifts']:
+            print(f"{date}: {worker['shifts'][date]}")
+        print('\n')
+    except TypeError:
+        print("Worker ID does not exist")
+
+def get_new_worker_details():
+    print(term.underline("Please type in the new worker ID"))
+    print()
+    answer = {}
+    answer = prompt(
+            {
+                "type": "input",
+                "name": "worker_id",
+                "message": "Worker ID:"
+            }
+        )
+    print(answer)
+    print(type(answer))
+    print()
+    print(term.underline("Please type in the new worker name"))
+    print()
+
+    answer.update(
+        prompt(
+            {
+                "type": "input",
+                "name": "name",
+                "message": "Worker name:"
+            }
+        )
+    )
+    print(answer)
+    print()
+    print(term.underline("Please type in the number of shifts"))
+    print()
+
+    answer.update(
+        prompt(
+            {
+                "type": "input",
+                "name": "no_shifts",
+                "message": "Number of shifts:"
+            }
+        )
+    )
+
+    shifts = {}
+    for i in range(len(answer['no_shifts'])):
+        print(term.underline(f"Please type in the date of shift {i+1}"))
+        print()
+
+        answer.update(
+            prompt(
+                {
+                    "type": "input",
+                    "name": "date",
+                    "message": "Shift date:"
+                }
+            )
+        )
+        print()
+        print(term.underline(f"Please type in the time of shift {i}. Accepted answers only 0-8, 8-16, 16-24."))
+        print()
+
+        answer.update(
+            prompt(
+                {
+                    "type": "input",
+                    "name": "time",
+                    "message": "Shift time:"
+                }
+            )
+        )
+        print()
+        shifts[answer['date']] = answer['time']
+
+    return str(answer['worker_id']), str(answer['name']), str(shifts)
+
+def add_new_worker(worker_id, name, shifts):
+    query = {"worker_id": str(worker_id), "name": str(name), "shifts": dict(shifts)}
+    print(query)
+    post = requests.post("http://localhost:5000/workers", json=query)
 
 if __name__ == "__main__":
 
@@ -67,5 +147,9 @@ if __name__ == "__main__":
     elif input_prompt["action"] == options_menu[1]:
         worker_id = get_worker_id()
         display_worker(worker_id)
+    elif input_prompt["action"] == options_menu[2]:
+        worker_id, name, shifts = get_new_worker_details()
+        add_new_worker(worker_id, name, shifts)
+        #add_new_worker("1020", "Joe Pass",{"27-06-2022":"0-8"})
     else:
     	print("All other options")
