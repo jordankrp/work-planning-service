@@ -94,45 +94,48 @@ def get_new_worker_details():
         prompt(
             {
                 "type": "input",
-                "name": "no_shifts",
+                "name": "number_shifts",
                 "message": "Number of shifts:"
             }
         )
     )
 
+    number_shifts = int(answer['number_shifts'])
+
     shifts = {}
-    for i in range(len(answer['no_shifts'])):
+    for i in range(number_shifts):
         print(term.underline(f"Please type in the date of shift {i+1}"))
         print()
-
         answer.update(
             prompt(
                 {
                     "type": "input",
-                    "name": "date",
-                    "message": "Shift date:"
+                    "name": f"shift_date_{i+1}",
+                    "message": f"Shift date {i+1}:"
                 }
             )
         )
         print()
-        print(term.underline(f"Please type in the time of shift {i}. Accepted answers only 0-8, 8-16, 16-24."))
+        print(term.underline(f"Please type in the time of shift {i+1}. Accepted answers only 0-8, 8-16, 16-24."))
         print()
-
         answer.update(
             prompt(
                 {
                     "type": "input",
-                    "name": "time",
-                    "message": "Shift time:"
+                    "name": f"shift_time_{i+1}",
+                    "message": f"Shift time {i+1}:"
                 }
             )
         )
         print()
-        shifts[answer['date']] = answer['time']
+        shifts[answer[f"shift_date_{i+1}"]] = answer[f"shift_time_{i+1}"]
 
-    return str(answer['worker_id']), str(answer['name']), str(shifts)
+    return str(answer['worker_id']), str(answer['name']), dict(shifts)
 
 def add_new_worker(worker_id, name, shifts):
+    print(f"worker_id: {worker_id}")
+    print(f"name: {name}")
+    print(f"shifts: {shifts}")
     query = {"worker_id": str(worker_id), "name": str(name), "shifts": dict(shifts)}
     print(query)
     post = requests.post("http://localhost:5000/workers", json=query)
@@ -148,8 +151,9 @@ if __name__ == "__main__":
         worker_id = get_worker_id()
         display_worker(worker_id)
     elif input_prompt["action"] == options_menu[2]:
+        # Need to handle ewrong date format
+        # need to handle wrong shift time
         worker_id, name, shifts = get_new_worker_details()
         add_new_worker(worker_id, name, shifts)
-        #add_new_worker("1020", "Joe Pass",{"27-06-2022":"0-8"})
     else:
     	print("All other options")

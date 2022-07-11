@@ -45,7 +45,6 @@ class WorkersList(Resource):
         parser.add_argument('name', type=str)
         parser.add_argument('shifts', type=dict)
         args = parser.parse_args()
-        print(f"Name provided is {args['name']}")
         if args['name'] == None or args['worker_id'] == None or args['shifts'] == None:
             return "Please provide a worker ID, name and shifts."
         else:
