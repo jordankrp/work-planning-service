@@ -40,21 +40,36 @@ class WorkersList(Resource):
     def get(self):
          return workers
 
+    # Restrict shift format dd-mm-yyyy
     def post(self):
         parser.add_argument('worker_id', type=str)
         parser.add_argument('name', type=str)
         parser.add_argument('shifts', type=dict)
         args = parser.parse_args()
+
+        # Check if all arguments have been provided
         if args['name'] == None or args['worker_id'] == None or args['shifts'] == None:
-            return "Please provide a worker ID, name and shifts."
+            return 'Please provide a worker ID, name and shifts.', 404
+        # Check if worker ID already exists
         else:
-            new_worker = {
-                'worker_id': args['worker_id'],
-                'name': args['name'],
-                'shifts': args['shifts'],
-            }
-            workers.append(new_worker)
-            return request.get_json(), 201
+            for worker in workers:
+                if args['worker_id'] == worker['worker_id']:
+                    return 'Worker ID already exists.', 404
+
+        # Check if shift time is in correct format (0-8, 8-16, 16-24)
+        for date in args['shifts']:
+            if args['shifts'][date] in ['0-8', '8-16', '16-24']:
+                #worker['shifts'] = {**worker['shifts'], **args['shifts']}
+                new_worker = {
+                    'worker_id': args['worker_id'],
+                    'name': args['name'],
+                    'shifts': args['shifts'],
+                }
+                workers.append(new_worker)
+                return request.get_json(), 201
+            else:
+                return 'Wrong shift format, shift must be 0-8, 8-16 or 16-24', 404
+            
 
 class Worker(Resource):
     def get(self, worker_id):
@@ -63,18 +78,20 @@ class Worker(Resource):
                 return worker
         return 'Worker ID does not exist', 404
 
+    # Restrict shift format dd-mm-yyyy
     def put(self, worker_id):
         parser.add_argument('shifts', type=dict)
         args = parser.parse_args()
         for worker in workers:
             if worker['worker_id'] == worker_id:
                 # Need to restrict shift values to 0-8, 8-16, 16-24
-                # For existin date, shift will be overwritten
-                if args['shifts'] in ['0-8', '8-16', '16-24']:
-                    worker['shifts'] = {**worker['shifts'], **args['shifts']}
-                else:
-                    print("Please enter a valid shift: 0-8, 8-16, 16-24")
-                return worker, 200
+                # For existing date, shift will be overwritten
+                for date in args['shifts']:
+                    if args['shifts'][date] in ['0-8', '8-16', '16-24']:
+                        worker['shifts'] = {**worker['shifts'], **args['shifts']}
+                        return worker, 200
+                    else:
+                        return 'Wrong shift format, shift must be 0-8, 8-16 or 16-24', 404
         return 'Worker ID does not exist', 404
 
     def delete(self, worker_id):
