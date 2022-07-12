@@ -3,7 +3,7 @@ import json
 from blessed import Terminal
 from PyInquirer import prompt
 
-options_menu = ["Display all workers", "Display specific worker", "Add new worker", "Add/ edit shift", "Delete shift", "Delete worker"]
+options_menu = ["Display all workers", "Display specific worker", "Add new worker", "Add / edit worker shift", "Delete shift", "Delete worker"]
 
 term = Terminal()
 
@@ -26,15 +26,6 @@ def print_start_screen():
     print('\n')
     return input_prompt
 
-def display_all_workers():
-    workers = requests.get("http://localhost:5000/workers")
-    for worker in workers.json():
-        print(f"Name: {worker['name']}")
-        print(f"Worker ID: {worker['worker_id']}")
-        for date in worker['shifts']:
-            print(f"{date}: {worker['shifts'][date]}")
-        print('\n')
-
 def get_worker_id():
     print(term.underline("Please type in the worker ID"))
     print()
@@ -47,18 +38,6 @@ def get_worker_id():
             }
         )
     return str(answer['worker_id'])
-
-def display_worker(worker_id):
-    req = requests.get(f"http://localhost:5000/workers/{worker_id}")
-    if req.status_code == 200:
-        worker = req.json()
-        print(f"Name: {worker['name']}")
-        print(f"Worker ID: {worker['worker_id']}")
-        for date in worker['shifts']:
-            print(f"{date}: {worker['shifts'][date]}")
-        print('\n')
-    else:
-        print(req.text)
         
 def get_new_worker_details():
     print(term.underline("Please type in the new worker ID"))
@@ -128,14 +107,42 @@ def get_new_worker_details():
 
     return str(answer['worker_id']), str(answer['name']), dict(shifts)
 
+def display_all_workers():
+    workers = requests.get("http://localhost:5000/workers")
+    for worker in workers.json():
+        print(f"Name: {worker['name']}")
+        print(f"Worker ID: {worker['worker_id']}")
+        for date in worker['shifts']:
+            print(f"{date}: {worker['shifts'][date]}")
+        print('\n')
+
+def display_worker(worker_id):
+    get_req = requests.get(f"http://localhost:5000/workers/{worker_id}")
+    if get_req.status_code == 200:
+        worker = get_req.json()
+        print(f"Name: {worker['name']}")
+        print(f"Worker ID: {worker['worker_id']}")
+        for date in worker['shifts']:
+            print(f"{date}: {worker['shifts'][date]}")
+        print('\n')
+    else:
+        print(get_req.text)
+
 def add_new_worker(worker_id, name, shifts):
     query = {"worker_id": str(worker_id), "name": str(name), "shifts": dict(shifts)}
-    post = requests.post("http://localhost:5000/workers", json=query)
-    if post.status_code == 201:
+    post_req = requests.post("http://localhost:5000/workers", json=query)
+    if post_req.status_code == 201:
         print("New worker added successfully")
         display_worker(worker_id)
     else:
-        print(post.text)
+        print(post_req.text)
+
+def delete_worker(worker_id):
+    delete_req = requests.delete(f"http://localhost:5000/workers/{worker_id}")
+    if delete_req.status_code == 204:
+        print(f"Worker with ID {worker_id} deleted successfully")
+    else:
+        print(delete_req.text)
 
 if __name__ == "__main__":
 
@@ -150,5 +157,10 @@ if __name__ == "__main__":
     elif input_prompt["action"] == options_menu[2]:
         worker_id, name, shifts = get_new_worker_details()
         add_new_worker(worker_id, name, shifts)
-    else:
-        print("All other options")
+    elif input_prompt["action"] == options_menu[3]:
+        print("Add / edit worker shift")
+    elif input_prompt["action"] == options_menu[4]:
+        print("delete shift")
+    elif input_prompt["action"] == options_menu[5]:
+        worker_id = get_worker_id()
+        delete_worker(worker_id)

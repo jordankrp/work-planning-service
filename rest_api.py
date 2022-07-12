@@ -106,7 +106,7 @@ class Worker(Resource):
             if worker['worker_id'] == worker_id:
                 workers.remove(worker)
                 return '', 204
-        return "Not found", 404
+        return "Worker ID not found", 404
 
 api.add_resource(WorkersList, '/workers')
 api.add_resource(Worker, '/workers/<worker_id>')
