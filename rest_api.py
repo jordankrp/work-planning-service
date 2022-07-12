@@ -50,25 +50,32 @@ class WorkersList(Resource):
         # Check if all arguments have been provided
         if args['name'] == None or args['worker_id'] == None or args['shifts'] == None:
             return 'Please provide a worker ID, name and shifts.', 404
+
         # Check if worker ID already exists
         else:
             for worker in workers:
                 if args['worker_id'] == worker['worker_id']:
                     return 'Worker ID already exists.', 404
 
-        # Check if shift time is in correct format (0-8, 8-16, 16-24)
         for date in args['shifts']:
-            if args['shifts'][date] in ['0-8', '8-16', '16-24']:
-                #worker['shifts'] = {**worker['shifts'], **args['shifts']}
-                new_worker = {
-                    'worker_id': args['worker_id'],
-                    'name': args['name'],
-                    'shifts': args['shifts'],
-                }
-                workers.append(new_worker)
-                return request.get_json(), 201
+            # Check if shift date is in correct format (DD-MM-YYYY)
+            try: 
+                datetime.strptime(date, '%d-%m-%Y')
+            except ValueError:
+                return 'Wrong date format, must be in the form dd-mm-yyyy', 404
             else:
-                return 'Wrong shift format, shift must be 0-8, 8-16 or 16-24', 404
+                print('correct format')
+                # Check if shift time is in correct format (0-8, 8-16, 16-24)
+                if args['shifts'][date] in ['0-8', '8-16', '16-24']:
+                    new_worker = {
+                        'worker_id': args['worker_id'],
+                        'name': args['name'],
+                        'shifts': args['shifts'],
+                    }
+                    workers.append(new_worker)
+                    return request.get_json(), 201
+                else:
+                    return 'Wrong shift format, must be 0-8, 8-16 or 16-24', 404
             
 
 class Worker(Resource):
