@@ -49,16 +49,17 @@ def get_worker_id():
     return str(answer['worker_id'])
 
 def display_worker(worker_id):
-    try:
-        worker = requests.get(f"http://localhost:5000/workers/{worker_id}").json()
+    req = requests.get(f"http://localhost:5000/workers/{worker_id}")
+    if req.status_code == 200:
+        worker = req.json()
         print(f"Name: {worker['name']}")
         print(f"Worker ID: {worker['worker_id']}")
         for date in worker['shifts']:
             print(f"{date}: {worker['shifts'][date]}")
         print('\n')
-    except TypeError:
-        print("Worker ID does not exist")
-
+    else:
+        print(req.text)
+        
 def get_new_worker_details():
     print(term.underline("Please type in the new worker ID"))
     print()
@@ -128,29 +129,13 @@ def get_new_worker_details():
     return str(answer['worker_id']), str(answer['name']), dict(shifts)
 
 def add_new_worker(worker_id, name, shifts):
-    print(f"worker_id: {worker_id}")
-    print(f"name: {name}")
-    print(f"shifts: {shifts}")
     query = {"worker_id": str(worker_id), "name": str(name), "shifts": dict(shifts)}
-    print(query)
     post = requests.post("http://localhost:5000/workers", json=query)
-
-def check_shift(date, time):
-
-    valid = True
-
-    # Check for correct format DD-MM-YYYY
-    if len(date) != 10 or date[2] != '-' or date[5] != '-':
-        print("Wrong shift format: please enter the date in the form DD-MM-YYYY.")
-        valid = False
-    elif int(date.split('-')[0]) > 31:
-        print("Wrong shift format: Day can be up to 31.")
-        valid = False
-    elif int(date.split('-')[1]) > 12:
-        print("Wrong shift format: Month can be up to 12.")
-        valid = False
-
-    return valid
+    if post.status_code == 201:
+        print("New worker added successfully")
+        display_worker(worker_id)
+    else:
+        print(post.text)
 
 if __name__ == "__main__":
 
@@ -164,12 +149,6 @@ if __name__ == "__main__":
         display_worker(worker_id)
     elif input_prompt["action"] == options_menu[2]:
         worker_id, name, shifts = get_new_worker_details()
-        for date in shifts:
-            # Need to handle wrong date / shift time format
-            if check_shift(date, shifts[date]):
-                print("Shift has valid format")
-                add_new_worker(worker_id, name, shifts)
-            else:
-                break
+        add_new_worker(worker_id, name, shifts)
     else:
         print("All other options")
