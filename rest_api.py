@@ -33,14 +33,12 @@ workers = [
     }
 ]
 
-
 parser = reqparse.RequestParser()
 
 class WorkersList(Resource):
     def get(self):
-         return workers
+        return workers
 
-    # Restrict shift format dd-mm-yyyy
     def post(self):
         parser.add_argument('worker_id', type=str)
         parser.add_argument('name', type=str)
@@ -64,7 +62,6 @@ class WorkersList(Resource):
             except ValueError:
                 return 'Wrong date format, must be in the form dd-mm-yyyy', 404
             else:
-                print('correct format')
                 # Check if shift time is in correct format (0-8, 8-16, 16-24)
                 if args['shifts'][date] in ['0-8', '8-16', '16-24']:
                     new_worker = {
@@ -91,14 +88,28 @@ class Worker(Resource):
         args = parser.parse_args()
         for worker in workers:
             if worker['worker_id'] == worker_id:
-                # Need to restrict shift values to 0-8, 8-16, 16-24
                 # For existing date, shift will be overwritten
+                # Check date format
                 for date in args['shifts']:
-                    if args['shifts'][date] in ['0-8', '8-16', '16-24']:
-                        worker['shifts'] = {**worker['shifts'], **args['shifts']}
-                        return worker, 200
+                    try: 
+                        datetime.strptime(date, '%d-%m-%Y')
+                    except ValueError:
+                        return 'Wrong date format, must be in the form dd-mm-yyyy', 404
                     else:
-                        return 'Wrong shift format, shift must be 0-8, 8-16 or 16-24', 404
+                        # Check if shift time is in correct format (0-8, 8-16, 16-24)
+                        if args['shifts'][date] in ['0-8', '8-16', '16-24']:
+                            worker['shifts'] = {**worker['shifts'], **args['shifts']}
+                            return worker, 200
+                        elif args['shifts'][date] == '':
+                            # This means we are deleting the shift
+                            try:
+                                del worker['shifts'][date]
+                            except KeyError:
+                                return 'Shift date does not exists for this worker', 404
+                            else:
+                                return f'Shift on {date} deleted successfully', 204
+                        else:
+                            return 'Wrong shift format, must be 0-8, 8-16 or 16-24', 404
         return 'Worker ID does not exist', 404
 
     def delete(self, worker_id):

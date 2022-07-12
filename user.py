@@ -107,6 +107,72 @@ def get_new_worker_details():
 
     return str(answer['worker_id']), str(answer['name']), dict(shifts)
 
+def get_new_shift():
+    print(term.underline("Please type in the worker ID"))
+    print()
+    answer = {}
+    answer = prompt(
+            {
+                "type": "input",
+                "name": "worker_id",
+                "message": "Worker ID:"
+            }
+        )
+    print()
+    print(term.underline("Please type in the worker shift date"))
+    print()
+    answer.update(
+        prompt(
+            {
+                "type": "input",
+                "name": "shift_date",
+                "message": "Shift date:"
+            }
+        )
+    )
+    print()
+    print(term.underline("Please type in the worker shift time"))
+    print()
+    answer.update(
+        prompt(
+            {
+                "type": "input",
+                "name": "shift_time",
+                "message": "Shift time:"
+            }
+        )
+    )
+    print()
+
+    return str(answer['worker_id']), str(answer['shift_date']), str(answer['shift_time'])
+
+def get_shift_to_remove():
+    print(term.underline("Please type in the worker ID"))
+    print()
+    answer = {}
+    answer = prompt(
+            {
+                "type": "input",
+                "name": "worker_id",
+                "message": "Worker ID:"
+            }
+        )
+    print()
+    print(term.underline("Please type in the worker shift date to be removes"))
+    print()
+    answer.update(
+        prompt(
+            {
+                "type": "input",
+                "name": "shift_date",
+                "message": "Shift date:"
+            }
+        )
+    )
+    print()
+
+    return str(answer['worker_id']), str(answer['shift_date'])
+
 def display_all_workers():
     workers = requests.get("http://localhost:5000/workers")
     for worker in workers.json():
@@ -144,6 +210,24 @@ def delete_worker(worker_id):
     else:
         print(delete_req.text)
 
+def update_shifts(worker_id, date, shift):
+    query = {'shifts': {date: shift}}
+    put_req = requests.put(f'http://localhost:5000/workers/{worker_id}', json=query)
+    if put_req.status_code == 200:
+        print(f"Shift of worker with ID {worker_id} updated successfully")
+        display_worker(worker_id)
+    else:
+        print(put_req.text)
+
+def remove_shift(worker_id, date):
+    query = {'shifts': {date: ''}}
+    put_req = requests.put(f'http://localhost:5000/workers/{worker_id}', json=query)
+    if put_req.status_code == 204:
+        print(f"Shift of worker with ID {worker_id} deleted successfully")
+        display_worker(worker_id)
+    else:
+        print(put_req.text)
+
 if __name__ == "__main__":
 
     input_prompt = None
@@ -158,9 +242,11 @@ if __name__ == "__main__":
         worker_id, name, shifts = get_new_worker_details()
         add_new_worker(worker_id, name, shifts)
     elif input_prompt["action"] == options_menu[3]:
-        print("Add / edit worker shift")
+        worker_id, date, time = get_new_shift()
+        update_shifts(worker_id, date, time)
     elif input_prompt["action"] == options_menu[4]:
-        print("delete shift")
+        worker_id, date = get_shift_to_remove()
+        remove_shift(worker_id, date)
     elif input_prompt["action"] == options_menu[5]:
         worker_id = get_worker_id()
         delete_worker(worker_id)
